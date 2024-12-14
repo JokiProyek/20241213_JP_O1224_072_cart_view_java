@@ -1,0 +1,2 @@
+INDEX VERSION 1.134+/home/fadi/Downloads/code/jokiproyek/20241213_JP_O1224_072/BADProject/.metadata/.plugins/org.eclipse.jdt.core
+1865797976.index

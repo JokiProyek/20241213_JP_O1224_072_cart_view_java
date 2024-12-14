@@ -1,0 +1,9 @@
+{
+    "java.project.sourcePaths": ["src"],
+    "java.project.outputPath": "bin",
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "/home/fadi/Downloads/code/jokiproyek/20241213_JP_O1224_072/BADProject/lib/javafx-sdk-17.0.7/lib*.jar",
+        "/home/fadi/Downloads/code/jokiproyek/20241213_JP_O1224_072/BADProject/lib/mysql-connector-java-8.0.24/mysql-connector-java-8.0.24.jar"
+    ]
+}
