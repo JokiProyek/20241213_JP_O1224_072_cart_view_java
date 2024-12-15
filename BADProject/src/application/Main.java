@@ -18,10 +18,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.ListView;
 import javafx.scene.Cursor;
 
 import java.sql.Statement;
@@ -41,6 +37,7 @@ import java.util.Optional;
 import javafx.scene.Group;
 import javafx.scene.image.WritableImage;
 import javafx.scene.SnapshotParameters;
+// Hapus import javax.swing
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -479,121 +476,163 @@ public class Main extends Application {
     }
 
     public void initQueueManager() {
-        // Create a new dialog
+        // Create main stage
         Stage queueStage = new Stage();
         queueStage.initModality(Modality.APPLICATION_MODAL);
-        queueStage.initOwner(primaryStage); // Assuming `primaryStage` is globally available
+        queueStage.initOwner(primaryStage);
         queueStage.setTitle("Queue Manager");
-    
-        // Main container for the dialog
+        queueStage.setMinWidth(800);
+        queueStage.setMinHeight(600);
+
+        // Create main container
         BorderPane mainContainer = new BorderPane();
-        mainContainer.setStyle("-fx-background-color: #a3c6ff;"); // Warna biru muda
         mainContainer.setPadding(new Insets(20));
-    
-        // Title
+        mainContainer.setStyle("-fx-background-color: #d1e7ff;");
+
+        // Create title
         Label title = new Label("Queue Manager");
-        title.setStyle("-fx-font-size: 24px; -fx-padding: 10; -fx-text-fill: white;");
-    
-        // Queue Table
+        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2e2f47;");
+
+        // Initialize table
         TableView<Map<String, Object>> queueTable = new TableView<>();
         queueTable.setStyle("-fx-background-color: white;");
-    
-        // Setup columns
+
+        // Create and configure columns
         TableColumn<Map<String, Object>, Integer> transactionIDCol = new TableColumn<>("Transaction ID");
-        transactionIDCol.setCellValueFactory(data -> {
-            Object value = data.getValue().get("TransactionID");
-            return value != null ? new SimpleIntegerProperty((Integer) value).asObject() : null;
-        });
-    
+        transactionIDCol.setCellValueFactory(
+                data -> new SimpleIntegerProperty((Integer) data.getValue().get("TransactionID")).asObject());
+
         TableColumn<Map<String, Object>, Integer> customerIDCol = new TableColumn<>("Customer ID");
-        customerIDCol.setCellValueFactory(data -> {
-            Object value = data.getValue().get("CustomerID");
-            return value != null ? new SimpleIntegerProperty((Integer) value).asObject() : null;
-        });
-    
+        customerIDCol.setCellValueFactory(
+                data -> new SimpleIntegerProperty((Integer) data.getValue().get("CustomerID")).asObject());
+
         TableColumn<Map<String, Object>, String> emailCol = new TableColumn<>("Customer Email");
-        emailCol.setCellValueFactory(data -> {
-            Object value = data.getValue().get("CustomerEmail");
-            return value != null ? new SimpleStringProperty((String) value) : null;
-        });
-    
+        emailCol.setCellValueFactory(data -> new SimpleStringProperty((String) data.getValue().get("CustomerEmail")));
+
         TableColumn<Map<String, Object>, String> dateCol = new TableColumn<>("Date");
-        dateCol.setCellValueFactory(data -> {
-            Object value = data.getValue().get("Date");
-            return value != null ? new SimpleStringProperty((String) value) : null;
-        });
-    
+        dateCol.setCellValueFactory(data -> new SimpleStringProperty((String) data.getValue().get("Date")));
+
         TableColumn<Map<String, Object>, Double> totalCol = new TableColumn<>("Total");
         totalCol.setCellValueFactory(data -> {
             Object value = data.getValue().get("Total");
-            return value != null ? new SimpleDoubleProperty((Double) value).asObject() : null;
-        });
-    
-        TableColumn<Map<String, Object>, String> statusCol = new TableColumn<>("Status");
-        statusCol.setCellValueFactory(data -> {
-            Object value = data.getValue().get("Status");
-            return value != null ? new SimpleStringProperty((String) value) : null;
-        });
-    
-        queueTable.getColumns().addAll(transactionIDCol, customerIDCol, emailCol, dateCol, totalCol, statusCol);
-    
-        // Send Package Button
-        Button sendPackageBtn = new Button("Send Package");
-        sendPackageBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-padding: 10 20; -fx-font-size: 14px;");
-    
-        sendPackageBtn.setOnAction(e -> {
-            Map<String, Object> selectedItem = queueTable.getSelectionModel().getSelectedItem();
-            if (selectedItem == null) {
-                showAlert(Alert.AlertType.ERROR, "No Transaction Selected", "Please select a transaction to send.");
-                return;
+            if (value != null) {
+                return new SimpleDoubleProperty((Double) value).asObject();
             }
-    
-            String status = (String) selectedItem.get("Status");
-            if (!"In Queue".equals(status)) {
-                showAlert(Alert.AlertType.INFORMATION, "Cannot Send Package", "This package has already been sent.");
-                return;
-            }
-    
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-            confirm.setTitle("Send Package");
-            confirm.setHeaderText("Confirm Package Sending");
-            confirm.setContentText("Are you sure you want to send this package?");
-            Optional<ButtonType> result = confirm.showAndWait();
-    
-            if (result.isPresent() && result.get() == ButtonType.OK) {
-                int transactionID = (Integer) selectedItem.get("TransactionID");
-    
-                try {
-                    String updateQuery = "UPDATE transactions SET Status='Sent' WHERE TransactionID=" + transactionID;
-                    connect.execUpdate(updateQuery); // Assuming `connect` is a valid DB connection handler
-                } catch (Exception ex) {
-                    showAlert(Alert.AlertType.ERROR, "Database Error", "Failed to update transaction: " + ex.getMessage());
+            return new SimpleDoubleProperty(0.0).asObject();
+        });
+        totalCol.setCellFactory(col -> new TableCell<Map<String, Object>, Double>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("$%.2f", item));
                 }
             }
         });
-    
+
+        TableColumn<Map<String, Object>, String> statusCol = new TableColumn<>("Status");
+        statusCol.setCellValueFactory(data -> new SimpleStringProperty((String) data.getValue().get("Status")));
+
+        // Add columns to table
+        queueTable.getColumns().addAll(
+                transactionIDCol,
+                customerIDCol,
+                emailCol,
+                dateCol,
+                totalCol,
+                statusCol);
+
+        // Set column widths
+        transactionIDCol.setPrefWidth(100);
+        customerIDCol.setPrefWidth(100);
+        emailCol.setPrefWidth(200);
+        dateCol.setPrefWidth(150);
+        totalCol.setPrefWidth(100);
+        statusCol.setPrefWidth(100);
+
+        // Create Send Package button
+        Button sendPackageBtn = new Button("Send Package");
+        sendPackageBtn.setStyle(
+                "-fx-background-color: #4CAF50; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-padding: 10 20; " +
+                        "-fx-font-size: 14px;");
+
+        // Add button event handler
+        sendPackageBtn.setOnAction(e -> {
+            Map<String, Object> selectedItem = queueTable.getSelectionModel().getSelectedItem();
+            if (selectedItem == null) {
+                showAlert(Alert.AlertType.ERROR, "No Selection", "Please select a transaction to process.");
+                return;
+            }
+
+            String status = (String) selectedItem.get("Status");
+            if (!"In Queue".equals(status)) {
+                showAlert(Alert.AlertType.WARNING, "Already Processed", "This package has already been sent.");
+                return;
+            }
+
+            // Confirm before sending
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+            confirm.setTitle("Confirm Action");
+            confirm.setHeaderText("Send Package");
+            confirm.setContentText("Are you sure you want to send this package?");
+
+            confirm.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.OK) {
+                    int transactionId = (Integer) selectedItem.get("TransactionID");
+                    boolean updated = connect.updateTransactionStatus(transactionId, "Sent");
+                    if (updated) {
+                        // Refresh table data
+                        loadQueueData(queueTable);
+
+                        Alert success = new Alert(Alert.AlertType.INFORMATION);
+                        success.setTitle("Success");
+                        success.setHeaderText(null);
+                        success.setContentText("Package has been marked as sent!");
+                        success.showAndWait();
+                    }
+                }
+            });
+        });
+
         // Layout
-        VBox mainContent = new VBox(10);
-        mainContent.getChildren().addAll(title, queueTable, sendPackageBtn);
-        mainContent.setStyle("-fx-background-color: #d1e7ff;"); // Biru muda yang lebih terang untuk area tabel
-        mainContent.setPadding(new Insets(10));
-            
-        mainContainer.setCenter(mainContent);
-    
-        // Create and set scene
-        Scene scene = new Scene(mainContainer, 800, 600);
+        VBox contentBox = new VBox(20);
+        contentBox.getChildren().addAll(title, queueTable, sendPackageBtn);
+        mainContainer.setCenter(contentBox);
+
+        // Initial data load
+        loadQueueData(queueTable);
+
+        // Create scene and show
+        Scene scene = new Scene(mainContainer);
         queueStage.setScene(scene);
         queueStage.show();
-    
     }
-    
-    private void showAlert(Alert.AlertType alertType, String title, String message) {
-        Alert alert = new Alert(alertType);
+
+    private void loadQueueData(TableView<Map<String, Object>> queueTable) {
+        List<Map<String, Object>> transactions = connect.getQueueManagerTransactions();
+        queueTable.getItems().clear();
+        queueTable.getItems().addAll(transactions);
+
+        // Add placeholder when no data
+        if (transactions.isEmpty()) {
+            Label placeholder = new Label("No transactions available");
+            placeholder.setStyle("-fx-text-fill: gray;");
+            queueTable.setPlaceholder(placeholder);
+        }
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
         alert.setTitle(title);
         alert.setHeaderText(null);
-        alert.setContentText(message);
+        alert.setContentText(content);
         alert.showAndWait();
     }
+
     private void refreshQueueTable() {
         try {
             List<Map<String, Object>> transactions = connect.getQueueManagerTransactions(); // Fetch transactions from
@@ -616,7 +655,8 @@ public class Main extends Application {
             });
         }
     }
-        public void addcomponentcartpage() {
+
+    public void addcomponentcartpage() {
         searchbarbox.getChildren().addAll(logoviewshopper, searchbarf, searchbtn, verticalline, mycartbtn, logoutbtn);
         bordersearchbar.setCenter(searchbarbox);
 
